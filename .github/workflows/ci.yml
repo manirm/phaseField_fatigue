@@ -1,0 +1,88 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Ubuntu: Hybrid setup (apt + uv)
+  test-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install FEniCSx (System Binaries)
+        run: |
+          sudo add-apt-repository ppa:fenics-packages/fenics
+          sudo apt update
+          sudo apt install -y libgl1-mesa-glx libegl1-mesa xvfb fenicsx
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install Dependencies
+        # Use --system-site-packages so uv can see the 'dolfinx' installed by apt
+        run: |
+          uv venv --system-site-packages
+          uv pip install .[test] 
+          # Note: phasefieldx is on PyPI, so uv will install it here
+          uv pip install phasefieldx
+
+      - name: Run Tests (Headless)
+        run: |
+          # Use xvfb-run for wxPython tests in a headless environment
+          xvfb-run uv run pytest
+
+  # Windows: Currently requires Conda or WSL
+  # Native 'uv' installation of FEniCSx is not yet supported on Windows
+  test-windows-conda:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: phasefield-env
+          channel-priority: strict
+          channels: conda-forge
+          python-version: 3.12
+
+      - name: Install FEniCSx via Conda-Forge
+        run: |
+          conda install -c conda-forge fenics-dolfinx phasefieldx wxpython
+
+      - name: Run Tests
+        run: |
+          python -m pytest
+
+  # macOS: Native 'uv' compilation of FEniCSx can fail due to complex C++ dependencies 
+  # Conda-Forge provides stable, pre-compiled bindings.
+  test-macos-conda:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: phasefield-env
+          channel-priority: strict
+          channels: conda-forge
+          python-version: 3.12
+
+      - name: Install Dependencies
+        run: |
+          conda install -c conda-forge fenics-dolfinx phasefieldx wxpython pytest pytest-mock
+          pip install -e .
+
+      - name: Run Tests
+        run: |
+          python -m pytest

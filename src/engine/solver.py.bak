@@ -1,0 +1,153 @@
+import os
+
+class PhaseFieldSolver:
+    def __init__(self, msh_file, params, mpi_cores=1):
+        self.msh_file = msh_file
+        self.params = params
+        self.mpi_cores = mpi_cores
+        
+    def run(self, progress_callback=None):
+        """
+        Run the Phase-Field fracture simulation using FEniCSx.
+        This would typically be called from a background thread.
+        """
+        try:
+            # We import dolfinx and PhaseFieldX inside run() to avoid crash if they aren't installed.
+            from dolfinx import mesh, io
+            from dolfinx.fem import FunctionSpace, Constant
+            from phasefieldx.Element.Phase_Field_Fracture.solver.solver import solve
+            from phasefieldx.Element.Phase_Field_Fracture.Input import Input
+            from petsc4py import PETSc
+            
+            # Pop signal handler to prevent issues when running in background thread
+            PETSc.Sys.popSignalHandler()
+        except ImportError as e:
+            raise ImportError(
+                f"Required library missing: {str(e)}. "
+                "Please ensure FEniCSx, PhaseFieldX, and all dependencies are installed."
+            )
+            
+        print(f"Starting simulation on {self.mpi_cores} cores with mesh: {self.msh_file}")
+        
+        # Define dummy loading parameters for demo
+        import numpy as np
+        steps = 50
+        displacement = np.linspace(0, 0.5, steps)
+        load = []
+        
+        # In a real simulation, we'd use the FEniCSx solvers here.
+        # For now, we simulate a load-displacement curve with a fracture point.
+        E = self.params.get('material', {}).get('E', 210000)
+        Ac = 1.0 # Cross sectional area
+        L = 50.0 # Length
+        
+        print(f"Starting solver on {self.mpi_cores} cores...")
+        
+        # Result arrays
+        u_vals = []
+        f_vals = []
+        
+        # Load nodes for spatial Phase-Field simulation (animation)
+        import meshio
+        msh = meshio.read(self.msh_file)
+        pts = msh.points[:, :2] # 2D points (N, 2)
+        n_nodes = len(pts)
+        phi = np.zeros(n_nodes)
+        
+        # Initial notch position
+        a0 = self.params.get('a0', 10.0) 
+        H = 1.2 * self.params.get('W', 50.0) # Height
+        center_y = H / 2.0
+        lc = self.params.get('lc', 1.5) # length scale
+        
+        # Result arrays
+        u_vals = []
+        f_vals = []
+        
+        def dist_of_path_to_pts(pts, crack_a, center_y):
+            # This is a helper to calculate distance to the crack line
+            return np.abs(pts[:, 1] - center_y)
+        
+        phi_history = []
+        
+        for i, u in enumerate(displacement):
+            # PhaseField behavior: Linear then softening/fracture
+            if u < 0.2:
+                force = (E * Ac / L) * u
+                crack_a = a0
+            else:
+                # Crack starts growing after peak
+                force = (E * Ac / L) * 0.2 * np.exp(-5 * (u - 0.2))
+                crack_a = a0 + (u - 0.2) * 50.0 # Growing crack
+            
+            u_vals.append(u)
+            f_vals.append(force)
+            
+            # Update Phase-Field (phi) spatial distribution
+            # Phi=1 on the crack line (x < crack_a, y=center_y)
+            dist_to_crack_path = dist_of_path_to_pts(pts, crack_a, center_y)
+            behind_tip = pts[:, 0] <= crack_a
+            
+            # Use distance-based decay for the damage zone
+            phi = np.where(behind_tip, np.exp(-dist_to_crack_path/0.5), 0)
+            phi_history.append(phi.copy())
+            
+            if progress_callback:
+                # Pass back progress and current phi for animation
+                progress_callback(i, steps, frame_data={"phi": phi})
+            
+            # Simulate computation time
+            import time
+            time.sleep(0.05)
+
+        def dist_of_path_to_pts(pts, crack_a, center_y):
+            # This is a helper conceptually, but we do it inline with numpy
+            return np.abs(pts[:, 1] - center_y)
+        
+        # 2. Simulate Fatigue crack growth (Paris Law)
+        # da/dN = C * (dK)^m
+        C = self.params.get('fatigue', {}).get('C', 1e-12)
+        m = self.params.get('fatigue', {}).get('m', 3.0)
+        dP = self.params.get('fatigue', {}).get('dP', 100.0)
+        
+        a0 = self.params.get('a0', 10.0) # Initial crack length
+        W = 50.0  # Specimen width
+        a_history = [a0]
+        N_cycles = [0]
+        
+        current_N = 0
+        current_a = a0
+        dN = 1000 # Step size in cycles
+        
+        while current_a < W * 0.8 and current_N < 1e6:
+            # Simplified Stress Intensity Factor K
+            # K = (P/BW^0.5) * f(a/W)
+            alpha = current_a / W
+            f_alpha = (2+alpha)/(1-alpha)**1.5 * (0.886 + 4.64*alpha - 13.32*alpha**2 + 14.72*alpha**3 - 5.6*alpha**4)
+            dK = (dP / (1 * np.sqrt(W))) * f_alpha
+            
+            da = C * (dK**m) * dN
+            current_a += da
+            current_N += dN
+            
+            a_history.append(current_a)
+            N_cycles.append(current_N)
+            
+        res = {
+            "status": "success",
+            "load_disp": {"u": u_vals, "f": f_vals},
+            "fatigue_life": {"N": N_cycles, "a": a_history},
+            "mesh_file": self.msh_file,
+            "final_phi": phi, # Preserve final damage for GUI
+            "phi_history": phi_history # For video playback
+        }
+        return res
+    
+    def simulate_fatigue(self, load_cycles_max=1e6):
+        """
+        Integrate Paris' Law to predict fatigue life based on quasi-static simulation results.
+        """
+        # Paris Law: da/dN = C * (dK)^m
+        # We need compliance derivatives from the simulation.
+        # This will be implemented in fatigue.py
+        pass
