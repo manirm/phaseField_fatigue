@@ -71,9 +71,10 @@ jobs:
           channels: conda-forge
           python-version: 3.12
 
-      - name: Install FEniCSx via Conda-Forge
+      - name: Install Dependencies
         run: |
-          conda install -c conda-forge fenics-dolfinx phasefieldx wxpython
+          conda install -c conda-forge fenics-dolfinx phasefieldx wxpython pytest pytest-mock pyyaml scikit-image
+          pip install -e .
 
       - name: Run Tests
         run: |
