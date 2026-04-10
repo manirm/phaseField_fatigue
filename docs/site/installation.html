@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation - Phase-Field Fatigue Suite</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="doc-wrapper">
+        <aside class="doc-sidebar">
+            <div class="sidebar-brand">PF-Fatigue Suite</div>
+            <div class="nav-group">
+                <div class="nav-group-title">Getting Started</div>
+                <a href="index.html" class="nav-link">Overview</a>
+                <a href="installation.html" class="nav-link active">Installation</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Technical Reference</div>
+                <a href="theory.html" class="nav-link">Theoretical Manual</a>
+                <a href="numerical.html" class="nav-link">Numerical Solver</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">User Guide</div>
+                <a href="usage.html" class="nav-link">App Walkthrough</a>
+                <a href="batch.html" class="nav-link">Batch Manager</a>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <h1>Installation Guide</h1>
+            <p>Setting up a scientific computing environment for FEniCSx and PETSc requires specific tools. We recommend using <strong>Conda (Mamba/Miniforge)</strong> for the most stable experience.</p>
+
+            <h2>1. Cross-Platform Quick Start</h2>
+            <pre>conda create -n fenicsx -c conda-forge fenics-dolfinx gmsh wxpython mpich
+conda activate fenicsx</pre>
+
+            <h2>2. OS-Specific Details</h2>
+
+            <h3>macOS (Intel & Apple Silicon)</h3>
+            <ul>
+                <li><strong>Silicon Chips:</strong> Use <em>Miniforge</em> for native ARM64 performance.</li>
+                <li><strong>Homebrew Conflict:</strong> Ensure you run <code>brew unlink mpich</code> if you have a system-wide MPI installed.</li>
+            </ul>
+
+            <h3>Windows (via WSL2)</h3>
+            <p>Direct Windows execution is not supported for high-performance physics. You must use <strong>WSL2 (Windows Subsystem for Linux)</strong>.</p>
+            <ol>
+                <li>Install Ubuntu 22.04 from the Microsoft Store.</li>
+                <li>Inside the WSL terminal, follow the Conda Quick Start above.</li>
+                <li>Ensure <strong>WSLg</strong> is up to date to support native graphical windows.</li>
+            </ol>
+
+            <h3>Linux (Ubuntu)</h3>
+            <p>You can use the native PPA for the highest performance:</p>
+            <pre>sudo add-apt-repository ppa:fenics-packages/fenics
+sudo apt update
+sudo apt install fenicsx gmsh</pre>
+
+            <div class="admonition warning">
+                <span class="admonition-title">MPI Warning</span>
+                If the application crashes on launch with "MPI Error", ensure you are running it within the active Conda environment where <code>mpich</code> was installed.
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -8,3 +8,15 @@ wheels/
 
 # Virtual environments
 .venv
+
+# macOS specific
+.DS_Store
+
+# Simulation results
+results/
+batch_results/
+
+# Temporary and log files
+*.log
+*.tmp
+.pytest_cache/

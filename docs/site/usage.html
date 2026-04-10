@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Walkthrough - Phase-Field Fatigue Suite</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="doc-wrapper">
+        <aside class="doc-sidebar">
+            <div class="sidebar-brand">PF-Fatigue Suite</div>
+            <div class="nav-group">
+                <div class="nav-group-title">Getting Started</div>
+                <a href="index.html" class="nav-link">Overview</a>
+                <a href="installation.html" class="nav-link">Installation</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Technical Reference</div>
+                <a href="theory.html" class="nav-link">Theoretical Manual</a>
+                <a href="numerical.html" class="nav-link">Numerical Solver</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">User Guide</div>
+                <a href="usage.html" class="nav-link active">App Walkthrough</a>
+                <a href="batch.html" class="nav-link">Batch Manager</a>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <h1>Application Walkthrough</h1>
+            <p>This guide explains the function of every component in the Phase-Field Fatigue Suite GUI to help you set up and analyze your scientific runs.</p>
+
+            <h2>1. Specimen Configuration</h2>
+            <p>The **Control Panel** (left pane) is where you define the geometry and material properties.</p>
+            <ul>
+                <li><strong>Template Choice:</strong> Select between CT (Compact Tension), SENB (Single Edge Notch Bending), or CCT geometries.</li>
+                <li><strong>Preview Mesh:</strong> Regenerates the Gmsh topology based on your selected length scale \(\ell\) and specimen dimensions. Always preview before running to ensure refinement is sufficient.</li>
+            </ul>
+
+            <h2>2. Material Parameters</h2>
+            <p>You can select from the **Material Presets** (e.g., Al7075, AISI 4340) or define custom values:</p>
+            <ul>
+                <li><strong>Young's Modulus (E):</strong> Elastic stiffness.</li>
+                <li><strong>Fracture Toughness (Gc):</strong> Energy release rate for crack initiation.</li>
+                <li><strong>Length Scale (L):</strong> Controls the width of the regularized crack profile. Smarter, narrower cracks require finer meshes.</li>
+            </ul>
+
+            <h2>3. Multi-Physics Dashboard</h2>
+            <p>The **Settings** tab (within the main Notebook) allows you to enable environmental effects:</p>
+            <ul>
+                <li><strong>Hydrogen Transport:</strong> Enables the stress-assisted diffusion solver.</li>
+                <li><strong>HEDE Degradation:</strong> Controls the decohesion sensitivity \(\chi\).</li>
+                <li><strong>D Coefficient:</strong> Effective diffusion speed through the lattice.</li>
+            </ul>
+
+            <h2>4. Running and Monitoring</h2>
+            <p>Once parameters are set, use the bottom-right buttons:</p>
+            <ul>
+                <li><strong>Mode - Quick:</strong> Rapid life estimation using analytical J-integration.</li>
+                <li><strong>Mode - Full:</strong> Research-grade 3D variational simulation.</li>
+                <li><strong>Stop:</strong> Gracefully interrupts the MPI process and saves current XDMF checkpoints.</li>
+            </ul>
+
+            <div class="admonition tip">
+                <span class="admonition-title">Tip: Post-Processing</span>
+                All simulation results are saved in the <code>results/</code> directory. Use Paraview to visualize the <code>.xdmf</code> files for 3D damage contour mapping.
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -7,10 +7,27 @@ class MeshGenerator:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
-    def generate_ct_specimen(self, W=50.0, a=22.5, lc=1.5, tip_refine=5.0):
+    def _apply_refinement(self, x_min, x_max, y_min, y_max, lc, tip_refine):
         """
-        Generate a realistic Compact Tension (CT) specimen mesh using OCC.
-        W: Characteristic width, a: Initial crack length, lc: Element size, tip_refine: factor
+        Apply a Box field for localized mesh refinement.
+        """
+        field_id = gmsh.model.mesh.field.add("Box")
+        gmsh.model.mesh.field.setNumber(field_id, "VIn", lc / tip_refine)
+        gmsh.model.mesh.field.setNumber(field_id, "VOut", lc)
+        gmsh.model.mesh.field.setNumber(field_id, "XMin", x_min)
+        gmsh.model.mesh.field.setNumber(field_id, "XMax", x_max)
+        gmsh.model.mesh.field.setNumber(field_id, "YMin", y_min)
+        gmsh.model.mesh.field.setNumber(field_id, "YMax", y_max)
+        gmsh.model.mesh.field.setNumber(field_id, "Thickness", lc * 3) # Transition zone
+
+        gmsh.model.mesh.field.setAsBackgroundMesh(field_id)
+        gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+        gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+
+    def generate_ct_specimen(self, W=50.0, a=22.5, lc=1.5, tip_refine=5.0, is_3d=False, thickness=10.0):
+        """
+        Generate a realistic Compact Tension (CT) specimen mesh with strip refinement.
         """
         if not gmsh.isInitialized():
             gmsh.initialize(interruptible=False)
@@ -18,48 +35,44 @@ class MeshGenerator:
             gmsh.clear()
         
         gmsh.model.add("CT_Specimen")
-        
-        # We use OpenCascade factory for booleans (holes/notch)
         occ = gmsh.model.occ
         
-        # Dimensions based on ASTM E399 (standard proportions)
-        h = 1.2 * W  # Total Height
-        w_total = 1.25 * W # Total Width
+        h = 1.2 * W
+        w_total = 1.25 * W
         hole_diam = 0.25 * W
         hole_x = 0.25 * W
-        hole_y_offset = 0.275 * W # Distance from centerline to hole center
+        hole_y_offset = 0.275 * W
         
-        # 1. Main body
         rect = occ.addRectangle(0, 0, 0, w_total, h)
-        
-        # 2. Holes
         hole1 = occ.addDisk(hole_x, h/2 + hole_y_offset, 0, hole_diam/2, hole_diam/2)
         hole2 = occ.addDisk(hole_x, h/2 - hole_y_offset, 0, hole_diam/2, hole_diam/2)
         
-        # 3. Notch (Simplified as a thin rectangle for now to serve as crack starter)
         notch_w = a
-        notch_h = 0.5 # thin slit
+        notch_h = 0.5
         notch = occ.addRectangle(0, h/2 - notch_h/2, 0, notch_w, notch_h)
         
-        # Boolean operations: Body - Holes - Notch
         specimen, _ = occ.cut([(2, rect)], [(2, hole1), (2, hole2), (2, notch)])
         
+        if is_3d:
+            occ.extrude(specimen, 0, 0, thickness)
+            
         occ.synchronize()
         
-        # Refine mesh near the crack tip
-        # We can add a point at (a, h/2) and set a smaller lc there
-        p_tip = gmsh.model.geo.addPoint(a, h/2, 0, lc/tip_refine)
-        gmsh.model.mesh.setSize([(0, p_tip)], lc/tip_refine)
+        # Refinement Box: Strip ahead of the notch tip
+        self._apply_refinement(
+            x_min=a - lc, x_max=w_total,
+            y_min=h/2 - lc*2, y_max=h/2 + lc*2,
+            lc=lc, tip_refine=tip_refine
+        )
         
-        gmsh.model.mesh.generate(2)
-        
+        gmsh.model.mesh.generate(3 if is_3d else 2)
         path = os.path.join(self.output_dir, "ct_specimen.msh")
         gmsh.write(path)
         return path
 
-    def generate_senb_specimen(self, L=100.0, H=20.0, a=10.0, lc=0.5, tip_refine=5.0):
+    def generate_senb_specimen(self, L=100.0, W=20.0, a=10.0, lc=1.0, tip_refine=5.0, symmetry=False, is_3d=False, thickness=10.0):
         """
-        Generate a Single Edge Notch Bending (SENB) specimen mesh.
+        Generate a Single Edge Notch Bending (SENB) specimen mesh with strip refinement.
         """
         if not gmsh.isInitialized():
             gmsh.initialize(interruptible=False)
@@ -67,24 +80,79 @@ class MeshGenerator:
             gmsh.clear()
             
         gmsh.model.add("SENB_Specimen")
+        occ = gmsh.model.occ
         
-        # Rectangular beam
-        p1 = gmsh.model.geo.addPoint(0, 0, 0, lc)
-        p2 = gmsh.model.geo.addPoint(L, 0, 0, lc)
-        p3 = gmsh.model.geo.addPoint(L, H, 0, lc)
-        p4 = gmsh.model.geo.addPoint(0, H, 0, lc)
+        if symmetry:
+            rect = occ.addRectangle(L/2, 0, 0, L/2, W)
+            notch_w = 0.5
+            notch = occ.addRectangle(L/2, 0, 0, notch_w, a)
+            specimen, _ = occ.cut([(2, rect)], [(2, notch)])
+        else:
+            rect = occ.addRectangle(0, 0, 0, L, W)
+            notch_w = 0.5
+            notch = occ.addRectangle(L/2 - notch_w/2, 0, 0, notch_w, a)
+            specimen, _ = occ.cut([(2, rect)], [(2, notch)])
+            
+        if is_3d:
+            occ.extrude(specimen, 0, 0, thickness)
+            
+        occ.synchronize()
         
-        l1 = gmsh.model.geo.addLine(p1, p2)
-        l2 = gmsh.model.geo.addLine(p2, p3)
-        l3 = gmsh.model.geo.addLine(p3, p4)
-        l4 = gmsh.model.geo.addLine(p4, p1)
+        # Refinement Box: Vertical strip ahead of the notch tip
+        self._apply_refinement(
+            x_min=L/2 - lc*2, x_max=L/2 + lc*2,
+            y_min=a - lc, y_max=W,
+            lc=lc, tip_refine=tip_refine
+        )
         
-        loop = gmsh.model.geo.addCurveLoop([l1, l2, l3, l4])
-        surf = gmsh.model.geo.addPlaneSurface([loop])
-        
-        gmsh.model.geo.synchronize()
-        gmsh.model.mesh.generate(2)
-        
+        gmsh.model.mesh.generate(3 if is_3d else 2)
         path = os.path.join(self.output_dir, "senb_specimen.msh")
+        gmsh.write(path)
+        return path
+
+    def generate_cct_specimen(self, W=50.0, H=100.0, a=10.0, lc=1.5, tip_refine=5.0, symmetry=False, is_3d=False, thickness=10.0):
+        """
+        Generate a Center-Cracked Tension (CCT) specimen mesh with strip refinement.
+        """
+        if not gmsh.isInitialized():
+            gmsh.initialize(interruptible=False)
+        else:
+            gmsh.clear()
+            
+        gmsh.model.add("CCT_Specimen")
+        occ = gmsh.model.occ
+        
+        if symmetry:
+            rect = occ.addRectangle(0, 0, 0, W/2, H/2)
+            notch_h = 0.5
+            notch = occ.addRectangle(0, 0, 0, a, notch_h)
+            specimen, _ = occ.cut([(2, rect)], [(2, notch)])
+        else:
+            rect = occ.addRectangle(0, 0, 0, W, H)
+            notch_h = 0.5
+            notch = occ.addRectangle(W/2 - a, H/2 - notch_h/2, 0, 2*a, notch_h)
+            specimen, _ = occ.cut([(2, rect)], [(2, notch)])
+            
+        if is_3d:
+            occ.extrude(specimen, 0, 0, thickness)
+            
+        occ.synchronize()
+        
+        # Refinement Box: Path ahead of the crack tip(s)
+        if symmetry:
+            self._apply_refinement(
+                x_min=a - lc, x_max=W/2,
+                y_min=-lc*2, y_max=lc*2,
+                lc=lc, tip_refine=tip_refine
+            )
+        else:
+            self._apply_refinement(
+                x_min=0, x_max=W,
+                y_min=H/2 - lc*2, y_max=H/2 + lc*2,
+                lc=lc, tip_refine=tip_refine
+            )
+        
+        gmsh.model.mesh.generate(3 if is_3d else 2)
+        path = os.path.join(self.output_dir, "cct_specimen.msh")
         gmsh.write(path)
         return path

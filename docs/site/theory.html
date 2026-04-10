@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Manual - Phase-Field Fatigue Suite</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="doc-wrapper">
+        <aside class="doc-sidebar">
+            <div class="sidebar-brand">PF-Fatigue Suite</div>
+            <div class="nav-group">
+                <div class="nav-group-title">Getting Started</div>
+                <a href="index.html" class="nav-link">Overview</a>
+                <a href="installation.html" class="nav-link">Installation</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Technical Reference</div>
+                <a href="theory.html" class="nav-link active">Theoretical Manual</a>
+                <a href="numerical.html" class="nav-link">Numerical Solver</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">User Guide</div>
+                <a href="usage.html" class="nav-link">App Walkthrough</a>
+                <a href="batch.html" class="nav-link">Batch Manager</a>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <h1>Theoretical Manual</h1>
+            <p>The Phase-Field Fatigue Suite is built upon the thermodynamics of variational fracture mechanics. This section details the mathematical models and degradation mechanisms implemented in the engine.</p>
+
+            <h2>1. Phase-Field Fracture (Variational)</h2>
+            <p>The variational approach to fracture approximates the sharp crack surface \(\Gamma\) with a regularized damage field \(\phi \in [0, 1]\). The total potential energy functional is expressed as:</p>
+            <div class="math-block">
+                \[ E(\mathbf{u}, \phi) = \int_{\Omega} \psi(\mathbf{\varepsilon}(\mathbf{u}), \phi) \, d\Omega + \int_{\Omega} G_c \gamma(\phi, \nabla \phi) \, d\Omega \]
+            </div>
+            <p>where \(\psi\) is the elastic energy density and \(\gamma\) is the crack surface density function defined by the Ambrosio-Tortorelli functional:</p>
+            <div class="math-block">
+                \[ \gamma(\phi, \nabla \phi) = \frac{1}{2\ell} \phi^2 + \frac{\ell}{2} |\nabla \phi|^2 \]
+            </div>
+
+            <h3>Energy Splitting (Miehe Model)</h3>
+            <p>To prevent crack propagation under compression, the elastic energy density is decomposed into positive (tensile) and negative (compressive) parts:</p>
+            <div class="math-block">
+                \[ \psi(\mathbf{\varepsilon}, \phi) = [g(\phi) + k] \psi_+(\mathbf{\varepsilon}) + \psi_-(\mathbf{\varepsilon}) \]
+            </div>
+            <p>where \(g(\phi) = (1-\phi)^2\) is the quadratic degradation function and \(k \ll 1\) is a small stability parameter.</p>
+
+            <h2>2. Environmental Fatigue (Hydrogen)</h2>
+            <p>The suite implements the Hydrogen-Enhanced Decohesion (HEDE) model coupled with stress-assisted mass transport.</p>
+
+            <h3>Stress-Assisted Diffusion</h3>
+            <p>The transport of hydrogen is driven by both concentration gradients and hydrostatic stress gradients:</p>
+            <div class="math-block">
+                \[ \frac{\partial c}{\partial t} = \nabla \cdot \left[ D \nabla c - \frac{D c V_H}{R T} \nabla \sigma_h \right] \]
+            </div>
+            <p>where \(\sigma_h = \text{tr}(\sigma)/3\) is the hydrostatic stress and \(V_H\) is the partial molar volume of hydrogen.</p>
+
+            <h3>HEDE Mechanism</h3>
+            <p>Local hydrogen occupancy degrades the fracture toughness \(G_c\) through a sensitivity parameter \(\chi\):</p>
+            <div class="math-block">
+                \[ G_c(\theta) = G_c(0) \left[ 1 - \chi \theta \right]^2 \]
+            </div>
+            <p>where \(\theta = c/c_{max}\) is the site occupancy.</p>
+
+            <h2>3. Fatigue Crack Growth</h2>
+            <p>Cyclic loading is handled via the modified energy density history field \(H\). For Paris' Law integration, the suite extracts the Stress Intensity Factor \(K\) using the numerical J-integral:</p>
+            <div class="math-block">
+                \[ J = \int_{A} \left[ \psi n_1 - \sigma_{ij} n_j \frac{\partial u_i}{\partial x_1} \right] q \, dA \]
+            </div>
+
+            <div class="admonition tip">
+                <span class="admonition-title">Pro Tip</span>
+                For 3D specimens, ensure the J-integral domain (the radius \(q\)) is at least 3-4 times the length scale \(\ell\) for accurate extraction.
+            </div>
+        </main>
+    </div>
+</body>
+</html>

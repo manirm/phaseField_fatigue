@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerical Solver - Phase-Field Fatigue Suite</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="doc-wrapper">
+        <aside class="doc-sidebar">
+            <div class="sidebar-brand">PF-Fatigue Suite</div>
+            <div class="nav-group">
+                <div class="nav-group-title">Getting Started</div>
+                <a href="index.html" class="nav-link">Overview</a>
+                <a href="installation.html" class="nav-link">Installation</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Technical Reference</div>
+                <a href="theory.html" class="nav-link">Theoretical Manual</a>
+                <a href="numerical.html" class="nav-link active">Numerical Solver</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">User Guide</div>
+                <a href="usage.html" class="nav-link">App Walkthrough</a>
+                <a href="batch.html" class="nav-link">Batch Manager</a>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <h1>Numerical Solver & Settings</h1>
+            <p>The core engine leverages FEniCSx and PETSc to solve the highly non-linear coupled system of equations. This section details the numerical implementation specifics.</p>
+
+            <h2>1. Staggered Iterative Scheme</h2>
+            <p>The coupled system \(( \mathbf{u}, c, \phi )\) is solved using an alternate minimization (staggered) approach rather than a monolithic Jacobian. This ensures stability in the damage field evolution.</p>
+            <ol>
+                <li><strong>Displacement Step:</strong> Solve for \(\mathbf{u}\) at fixed \(\phi, c\).</li>
+                <li><strong>Diffusion Step:</strong> Solve for \(c\) at fixed \(\mathbf{u}, \phi\).</li>
+                <li><strong>Phase-Field Step:</strong> Solve for \(\phi\) at fixed \(\mathbf{u}, c\).</li>
+            </ol>
+            <p>The cycle repeats until the \(\phi\) residual satisfies: \(\| \phi_{n+1} - \phi_n \| < \epsilon \).</p>
+
+            <h2>2. PETSc Solver Configuration</h2>
+            <p>The suite uses high-performance linear and non-linear solvers tuned for large 3D meshes.</p>
+
+            <h3>Displacement Solver (Linear)</h3>
+            <ul>
+                <li><strong>Type:</strong> Conjugate Gradient (CG)</li>
+                <li><strong>PC:</strong> Geometric Multigrid (GMG) or Algebraic Multigrid (GAMG)</li>
+                <li><strong>Tolerance:</strong> \(10^{-8}\)</li>
+            </ul>
+
+            <h3>Phase-Field Solver (Inequality Constrained)</h3>
+            <p>The damage field is irreversibility-constrained (\(\dot{\phi} \geq 0\)). We solve this using a variational inequality solver:</p>
+            <pre>
+petsc_options = {
+    "snes_type": "vinewtonrsls",
+    "snes_vi_monitor": "",
+    "ksp_type": "preonly",
+    "pc_type": "lu"
+}</pre>
+
+            <h2>3. Mesh Refinement Strategy</h2>
+            <p>Accurate phase-field modeling requires an element size \(h < \ell / 2\). The suite implements <strong>Adaptive Box Refinement</strong>:</p>
+            <ul>
+                <li><strong>Base Mesh:</strong> Coarse everywhere to reduce MPI load.</li>
+                <li><strong>Refinement Zone:</strong> A localized box ahead of the notch where \(h \approx \ell / 5\).</li>
+                <li><strong>Transition:</strong> Smooth GRADIENT transition to prevent numerical stress reflections.</li>
+            </ul>
+
+            <div class="admonition warning">
+                <span class="admonition-title">Warning</span>
+                Setting the length scale \(\ell\) too small relative to the mesh size will cause the crack to "hop" between nodes or fail to propagate.
+            </div>
+        </main>
+    </div>
+</body>
+</html>

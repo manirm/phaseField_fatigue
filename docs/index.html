@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase-Field Fatigue Suite - User Guide</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --sidebar-width: 280px;
+            --text-color: #333;
+            --bg-light: #f8f9fa;
+            --border-color: #dee2e6;
+            --code-bg: #272822;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            color: var(--text-color);
+            background-color: white;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-light);
+            border-right: 1px solid var(--border-color);
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar-header {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .nav-item {
+            display: block;
+            padding: 8px 0;
+            text-decoration: none;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .nav-item:hover {
+            color: var(--primary-color);
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: var(--sidebar-width);
+            padding: 40px 60px;
+            max-width: 900px;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            margin-top: 40px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .contact-box {
+            background: #e9ecef;
+            padding: 20px;
+            border-left: 5px solid var(--primary-color);
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        code {
+            background: var(--bg-light);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        pre {
+            background: var(--code-bg);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            vertical-align: middle;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .content { margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">PF-Fatigue Suite <span class="badge">v1.0</span></div>
+    <nav>
+        <a href="#intro" class="nav-item">Introduction</a>
+        <a href="#install" class="nav-item">Installation Guide</a>
+        <a href="#quickstart" class="nav-item">Quick Start</a>
+        <a href="#batch" class="nav-item">Batch Processing</a>
+        <a href="#license" class="nav-item">License & Copyright</a>
+    </nav>
+</div>
+
+<div class="content">
+    <header>
+        <h1 id="intro">Phase-Field Fatigue Suite User Guide</h1>
+        <p>Design and Developed by <strong>Mohammed Maniruzzaman</strong></p>
+    </header>
+
+    <div class="contact-box">
+        <strong>Direct Contact & Support:</strong><br>
+        Email: <a href="mailto:mmaniruzzaman@alum.wpi.edu">mmaniruzzaman@alum.wpi.edu</a><br>
+        Organization: <em>WPI Alumnus</em>
+    </div>
+
+    <p>The Phase-Field Fatigue Suite is a professional 3D fracture mechanics application designed for high-fidelity crack propagation analysis. It integrates advanced multi-physics models, including Hydrogen-Assisted Fracture and stress-assisted diffusion.</p>
+
+    <h2 id="install">Installation & Environment</h2>
+    <p>To ensure numerical stability and performance, we recommend using <strong>Conda</strong> or <strong>Mamba</strong> to manage the scientific stack (FEniCSx, PETSc, and Gmsh).</p>
+    
+    <h3>Windows (via WSL2)</h3>
+    <p>Native Windows is not supported for the solver engine. Please install <strong>WSL2 (Ubuntu 22.04+)</strong> and follow the instructions within the WSL terminal.</p>
+    
+    <h3>macOS (Intel & Apple Silicon)</h3>
+    <pre>conda create -n fenicsx -c conda-forge fenics-dolfinx gmsh wxpython mpi4py</pre>
+    <p><em>Tip:</em> Use <strong>Miniforge</strong> on M1/M2/M3 chips for native ARM64 performance.</p>
+
+    <h3>Linux (Ubuntu 22.04+)</h3>
+    <pre>sudo add-apt-repository ppa:fenics-packages/fenics
+sudo apt update
+sudo apt install fenicsx gmsh</pre>
+
+    <h2 id="quickstart">Quick Start</h2>
+    <p>Follow these steps to generate your first 3D fracture simulation:</p>
+    <ul>
+        <li><strong>Select Specimen:</strong> Choose CT, SENB, or CCT from the dropdown.</li>
+        <li><strong>Preview Mesh:</strong> Click <em>Preview Mesh</em> to verify refinement density.</li>
+        <li><strong>Parameters:</strong> Set Young's Modulus (E) and Fracture Toughness (Gc).</li>
+        <li><strong>Run:</strong> Select "Full Mode" for variational staggered analysis and click <em>Run Simulation</em>.</li>
+    </ul>
+
+    <h2 id="batch">Batch Processing & DOE</h2>
+    <p>Perform parametric sweeps using the <strong>Batch Manager</strong> tab. This feature supports automated Grid Searches. Simply enable the parameters you wish to vary, provide a comma-separated list of values, and click <em>Generate & Run Batch</em>. The suite will automatically plot result trends once the queue finishes.</p>
+
+    <h2 id="license">License & Copyright</h2>
+    <p>This software is provided under the <strong>MIT License</strong>.</p>
+    <p>&copy; 2026 Mohammed Maniruzzaman. All rights reserved.</p>
+
+    <div class="footer">
+        Documentation generated on 2026-04-10. Professional Mechanical Suite for Fracture Research.
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+# Standard Material Properties for Phase-Field Fatigue Analysis
+# Units: E (MPa), nu (-), Gc (N/mm), C (mm/cycle), m (-)
+
+structural_steel:
+  name: "Structural Steel (A36)"
+  E: 200000.0
+  nu: 0.3
+  Gc: 50.0
+  C: 1.0e-12
+  m: 3.0
+  chi: 0.89
+  D: 1.0e-10
+
+aluminum_7075:
+  name: "Aluminum 7075-T6"
+  E: 71700.0
+  nu: 0.33
+  Gc: 15.0
+  C: 5.0e-13
+  m: 3.5
+  chi: 0.4
+  D: 1.0e-13
+
+titanium_6al4v:
+  name: "Titanium Ti-6Al-4V"
+  E: 114000.0
+  nu: 0.34
+  Gc: 40.0
+  C: 2.0e-13
+  m: 3.2
+  chi: 0.6
+  D: 1.0e-14
+
+brittle_glass:
+  name: "Borosilicate Glass"
+  E: 64000.0
+  nu: 0.2
+  Gc: 0.01
+  C: 1.0e-18
+  m: 10.0
+  chi: 0.0
+  D: 1.0e-20

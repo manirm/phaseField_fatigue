@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview - Phase-Field Fatigue Suite</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="doc-wrapper">
+        <aside class="doc-sidebar">
+            <div class="sidebar-brand">PF-Fatigue Suite</div>
+            <div class="nav-group">
+                <div class="nav-group-title">Getting Started</div>
+                <a href="index.html" class="nav-link active">Overview</a>
+                <a href="installation.html" class="nav-link">Installation</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Technical Reference</div>
+                <a href="theory.html" class="nav-link">Theoretical Manual</a>
+                <a href="numerical.html" class="nav-link">Numerical Solver</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">User Guide</div>
+                <a href="usage.html" class="nav-link">App Walkthrough</a>
+                <a href="batch.html" class="nav-link">Batch Manager</a>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <h1>Phase-Field Fatigue Suite</h1>
+            <p class="lead">A professional, high-fidelity 3D multi-physics suite for advanced fracture mechanics and environmental fatigue analysis.</p>
+            
+            <p>Designed and Developed by <strong>Mohammed Maniruzzaman</strong>, this suite provides a unified research environment for simulating complex crack initiation and propagation in 3D metallic components.</p>
+
+            <h2>Core Capabilities</h2>
+            <ul>
+                <li><strong>3D Variational Solver:</strong> High-resolution staggered iterative solver for coupled displacement-damage fields.</li>
+                <li><strong>Hydrogen Embrittlement:</strong> Fully coupled HEDE (Decohesion) and stress-assisted mass transport models.</li>
+                <li><strong>Automated DOE:</strong> Grid-search batch processor for parametric sensitivity studies.</li>
+                <li><strong>Scientific J-Integral:</strong> Numerical domain integration for precise \(K\) and \(\Delta K\) extraction.</li>
+            </ul>
+
+            <h2>Supported Specimen Geometries</h2>
+            <div class="specimen-gallery" style="display: flex; gap: 20px; margin-top: 20px;">
+                <div style="text-align: center; border: 1px solid #eee; padding: 15px; border-radius: 8px;">
+                    <img src="images/ct_icon.svg" width="120" height="120">
+                    <p><strong>CT</strong><br>Compact Tension</p>
+                </div>
+                <div style="text-align: center; border: 1px solid #eee; padding: 15px; border-radius: 8px;">
+                    <img src="images/senb_icon.svg" width="120" height="120">
+                    <p><strong>SENB</strong><br>Bending Notch</p>
+                </div>
+                <div style="text-align: center; border: 1px solid #eee; padding: 15px; border-radius: 8px;">
+                    <img src="images/cct_icon.svg" width="120" height="120">
+                    <p><strong>CCT</strong><br>Center Cracked</p>
+                </div>
+            </div>
+
+            <h2>Licensing</h2>
+            <p>Released under the <strong>MIT License</strong>. (C) 2026 Mohammed Maniruzzaman.</p>
+
+            <div class="admonition tip">
+                <span class="admonition-title">New to PF-Fatigue?</span>
+                Start with the <a href="installation.html">Installation Guide</a> to set up your FEniCSx environment, then follow the <a href="usage.html">App Walkthrough</a>.
+            </div>
+        </main>
+    </div>
+</body>
+</html>
